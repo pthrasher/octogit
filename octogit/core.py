@@ -26,6 +26,28 @@ SINGLE_ISSUE_PAGE = 'https://github.com/%s/%s/issues/%s'
 
 UPDATE_ISSUE = 'https://api.github.com/repos/%s/%s/issues/%s'
 
+REPO_ENDPOINT = 'https://api.github.com/repos/%s/%s'
+
+
+def get_repo_info(username, reponame):
+    url = REPO_ENDPOINT % (username, reponame,)
+
+    if valid_credentials():
+        r = requests.get(url, auth=(get_username(), get_password()))
+    else:
+        r = requests.get(url)
+
+    repo = simplejson.loads(r.content)
+
+    message = repo.get('message')
+
+    if message:
+        puts('{0}. {1}'.format(colored.blue('octogit'),
+            colored.red(message)))
+        sys.exit()
+
+    return repo
+
 
 def valid_credentials():
     r = requests.get('https://api.github.com', auth=(get_username(), get_password()))
@@ -245,7 +267,7 @@ def get_issues(user, repo, assigned=None):
         connect = requests.get(github_issues_url + '?page=%s' % pagenum)
 
         try:
-            data = json.loads(connect.content)
+            data = simplejson.loads(connect.content)
         except ValueError:
             raise ValueError(connect.content)
 
